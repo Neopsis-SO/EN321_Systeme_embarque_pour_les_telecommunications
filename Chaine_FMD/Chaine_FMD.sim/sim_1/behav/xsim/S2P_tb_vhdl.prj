@@ -1,0 +1,7 @@
+# compile vhdl design source files
+vhdl xil_defaultlib  \
+"../../../../Chaine_FMD.srcs/sources_1/imports/src.vhd/S2P.vhd" \
+"../../../../Chaine_FMD.srcs/sim_1/imports/sim.vhd/tb_S2P.vhd" \
+
+# Do not sort compile order
+nosort

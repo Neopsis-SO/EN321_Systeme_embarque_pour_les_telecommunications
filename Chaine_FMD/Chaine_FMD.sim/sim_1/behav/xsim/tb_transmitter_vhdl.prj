@@ -1,0 +1,10 @@
+# compile vhdl design source files
+vhdl xil_defaultlib  \
+"../../../../../src.vhd/code_conv.vhd" \
+"../../../../Chaine_FMD.srcs/sources_1/imports/src.vhd/txt_util.vhd" \
+"../../../../../sim.vhd/read_int_file.vhd" \
+"../../../../../src.vhd/transmitter.vhd" \
+"../../../../../sim.vhd/tb_transmitter.vhd" \
+
+# Do not sort compile order
+nosort
