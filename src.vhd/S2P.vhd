@@ -31,34 +31,48 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity codeur_conv is
-    Port(
-		iClock            : in	std_logic;
-		iReset            : in	std_logic;
-		iEN	    		    : in	std_logic;
-		iData            	: in	std_logic;
-		oDataX           	: out std_logic;
-		oDataY           	: out std_logic
-	 );
-end codeur_conv;
+entity S2P is
+    GENERIC (width: integer := 4);
+    PORT (
+        clk : in std_logic;
+        reset : in std_logic;
+        i_data_valid : in std_logic;
+        serial_data : in std_logic;
+        par_data : out std_logic_vector(width-1 downto 0);
+        o_data_valid : out std_logic);
+end S2P;
 
-architecture Behavioral of codeur_conv is   
-    signal bascule_Nbits : STD_LOGIC_VECTOR (2 downto 0);
+architecture Behavioral of S2P is
+    signal counter : unsigned(width-1 downto 0);
 begin
-    process(iClock, iReset)
+
+counters : process (clk, reset)
     begin
-        if (iReset = '1') then
-            bascule_Nbits <= (OTHERS=> '0');
-        elsif (iClock'event and iClock = '1') then
-            if (iEN = '1') then
-                bascule_Nbits(2) <= bascule_Nbits(1) ;
-                bascule_Nbits(1) <= bascule_Nbits(0) ;
-                bascule_Nbits(0) <= iData;
+    if (reset = '1') then
+        counter <= (others => '0');
+        o_data_valid <= '0';	
+    elsif (clk'event and clk = '1') then
+        o_data_valid <= '0';
+        if(i_data_valid = '1') then
+            if(counter = (width-1)) then
+                counter <= (others => '0');
+                o_data_valid <= '1';		
+            else
+                counter <= counter + 1;
+            end if;			
+        end if;
+    end if;
+end process;
+
+S2P : process(clk, reset)
+    begin
+        if (reset = '1') then
+            par_data <= (OTHERS=> '0');
+        elsif (clk'event and clk = '1') then
+            if (i_data_valid = '1') then
+                par_data(to_integer(counter)) <= serial_data;
             end if;
         end if;
     end process;
-
-oDataX <= bascule_Nbits(0) XOR bascule_Nbits(2);
-oDataY <= bascule_Nbits(1) XOR bascule_Nbits(2);
 
 end Behavioral;

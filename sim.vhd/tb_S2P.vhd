@@ -26,7 +26,7 @@ architecture bench of S2P_tb is
   signal reset: std_logic;
   signal i_data_valid: std_logic;
   signal serial_data: std_logic;
-  signal par_data: std_logic_vector(width-1 downto 0);
+  signal par_data: std_logic_vector(4-1 downto 0);
   signal o_data_valid: std_logic;
 
   constant clock_period: time := 10 ns;
@@ -35,7 +35,7 @@ architecture bench of S2P_tb is
 begin
 
   -- Insert values for generic parameters !!
-  uut: S2P generic map ( width        =>  )
+  uut: S2P generic map ( width        =>  4)
               port map ( clk          => clk,
                          reset        => reset,
                          i_data_valid => i_data_valid,
@@ -47,10 +47,56 @@ begin
   begin
   
     -- Put initialisation code here
-
+    serial_data <= '0';
+    i_data_valid <= '0';
+    reset <= '1';
+    wait for 4 * clock_period;
+    reset <= '0';
+    wait for 4 * clock_period;
 
     -- Put test bench stimulus code here
-
+    serial_data <= '1';
+    i_data_valid <= '1';
+    wait for clock_period;
+    i_data_valid <= '0';
+    wait for 2 * clock_period;
+    
+    serial_data <= '0';
+    i_data_valid <= '1';
+    wait for clock_period;
+    i_data_valid <= '0';
+    wait for 2 * clock_period;
+    
+    serial_data <= '1';
+    i_data_valid <= '1';
+    wait for clock_period;
+    i_data_valid <= '0';
+    wait for 2 * clock_period;
+    
+    serial_data <= '1';
+    i_data_valid <= '1';
+    wait for clock_period;
+    i_data_valid <= '0';
+    wait for 2 * clock_period;
+        
+    serial_data <= '0';
+    i_data_valid <= '1';
+    wait for clock_period;
+    i_data_valid <= '0';
+    wait for 2 * clock_period;
+    
+    serial_data <= '1';
+    i_data_valid <= '1';
+    wait for clock_period;
+    i_data_valid <= '0';
+    wait for 2 * clock_period;
+    
+    serial_data <= '0';
+    i_data_valid <= '1';
+    wait for clock_period;
+    i_data_valid <= '0';
+    wait for 2 * clock_period;
+    
     stop_the_clock <= true;
     wait;
   end process;
