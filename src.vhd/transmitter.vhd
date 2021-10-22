@@ -72,24 +72,15 @@ component hamenc IS
         o_dv   : out std_logic);
 end component;
 
-component P2S is
-generic (width: integer := 7);
-port (
-	clk : in std_logic;
-	reset : in std_logic;
-	load : in std_logic;
-	par_data : in std_logic_vector(width-1 downto 0);
-	serial_data : out std_logic;
-	serial_data_valid : out std_logic);
-end component;
-
 component entrelaceur is
+generic (width: integer := 7);
 	port(
-		iClock            : in	std_logic;
-		iReset            : in	std_logic;
-		iEN	    			: in	std_logic;	-- compteur de 0 � 6
-		iData            	: in	std_logic;
-		oData           	: out std_logic
+		iClock : in std_logic;
+        iReset : in std_logic;
+        iEN    : in std_logic;
+        par_data : in std_logic_vector(width-1 downto 0);
+        serial_data : out std_logic;
+        serial_data_valid : out std_logic
 	 );
 end component;
 
@@ -104,7 +95,7 @@ component codeur_conv is
 	 );
 end component;
 
-signal scrambler_out_dv, S2P_out_dv, bch_out_dv, p2s_out_dv : std_logic;
+signal scrambler_out_dv, S2P_out_dv, bch_out_dv, entrelaceur_out_dv : std_logic;
 signal scrambler_out : std_logic;
 signal S2P_out : std_logic_vector(3 downto 0);
 signal bch_out : std_logic_vector(7 downto 0);
@@ -137,23 +128,16 @@ begin
 --                          o_data => bch_out,
 --                          o_dv => bch_out_dv);
 
---ps2_inst : P2S generic map(width  => 7)
---               port map(clk => clk,
---                        reset => rst,
---                        load => bch_out_dv,
---                        par_data => bch_out(6 downto 0),
---                        serial_data => p2s_out,
---                        serial_data_valid => p2s_out_dv);
-
 --intrl : entrelaceur port map( iClock => clk,
 --                              iReset => rst,
---                              iEN => p2s_out_dv,
---                              iData => p2s_out,
---                              oData => intrl_out);
+--                              iEN => bch_out_dv,
+--                              par_data => bch_out(6 downto 0),
+--                              serial_data => intrl_out,
+--                              serial_data_valid => entrelaceur_out_dv);
                               
 --cc : codeur_conv port map(	  iClock => clk,
 --                              iReset => rst,
---                              iEN => p2s_out_dv,
+--                              iEN => entrelaceur_out_dv,
 --                              iData => intrl_out,
 --                              oDataX => x1,
 --                              oDataY => x2);
@@ -171,22 +155,44 @@ begin
 --------------------------------------------
 --------------------------------------------
 
----------------Coder_conv-------------------
+--------------------------------------------
+-----------BCH and Entrelaceur--------------
+--------------------------------------------
+bch_enc : hamenc port map(rst => rst,
+                          clk => clk,
+                          i_data => stream_in(3 downto 0),
+                          i_dv => enable,
+                          o_data => bch_out,
+                          o_dv => bch_out_dv);
 
-cc_test : codeur_conv port map(	  iClock => clk,
+intrl : entrelaceur port map( iClock => clk,
                               iReset => rst,
-                              iEN => enable,
-                              iData => stream_in(0),
-                              oDataX => x1,
-                              oDataY => x2);
-stream_out(7 downto 2) <= (others => '0');
-stream_out(0) <= x1;
-stream_out(1) <= x2;
-data_valid <= enable;
+                              iEN => bch_out_dv,
+                              par_data => bch_out(6 downto 0),
+                              serial_data => stream_out(0),
+                              serial_data_valid => data_valid);
 
+stream_out(7 downto 1) <= (others => '0');
+
+--------------------------------------------
+-------------Coder_conv only----------------
+--------------------------------------------
+--cc_test : codeur_conv port map(	  iClock => clk,
+--                              iReset => rst,
+--                              iEN => enable,
+--                              iData => stream_in(0),
+--                              oDataX => x1,
+--                              oDataY => x2);
+							  
+--stream_out(7 downto 2) <= (others => '0');
+--stream_out(0) <= x1;
+--stream_out(1) <= x2;
+--data_valid <= enable;
+
+--------------------------------------------
+--------------------------------------------
+--------------------------------------------
+--------------------------------------------
 -------------End Test part------------------
---------------------------------------------
---------------------------------------------
---------------------------------------------
---------------------------------------------
+
 end Behavioral;
