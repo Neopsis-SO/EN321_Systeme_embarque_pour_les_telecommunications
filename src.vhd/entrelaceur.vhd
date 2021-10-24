@@ -52,7 +52,7 @@ signal ligne_7 : STD_LOGIC_VECTOR(6 downto 0);
 begin
 counters : process (iClock, iReset) begin
     if (iReset = '1') then
-        counter <= (others => '0');
+        counter <= to_unsigned(6, 3);
         serial_data_valid <= '0';
     elsif (iClock'EVENT and iClock = '1') then
         serial_data_valid <= '0';
@@ -77,7 +77,6 @@ serial : process (iClock, iReset) begin
     elsif (iClock'EVENT and iClock = '1') then
         if (iEN = '1') then
             -- Récupération de la valeur d'entrée
-            ligne_1 <= par_data(0);
             ligne_2(0) <= par_data(1);
             ligne_3(0) <= par_data(2);
             ligne_4(0) <= par_data(3);
@@ -124,11 +123,10 @@ serial : process (iClock, iReset) begin
     end if;   
 end process;
 
-mux : process(iClock, iReset)
+ligne_1 <= par_data(0);
+
+mux : process(counter, ligne_1, ligne_2, ligne_3, ligne_4, ligne_5, ligne_6, ligne_7)
     begin
-        if (iReset = '1') then
-            serial_data       <= '0';
-        elsif (iClock'event and iClock = '1') then
             case counter is
                 when "000" =>
                     serial_data <= ligne_1;
@@ -146,9 +144,7 @@ mux : process(iClock, iReset)
                     serial_data <= ligne_7(to_integer(counter));
                 when OTHERS =>
                     serial_data <= '0';
-         
             end case;
-        end if;
 end process;
 
 end Behavioral;
