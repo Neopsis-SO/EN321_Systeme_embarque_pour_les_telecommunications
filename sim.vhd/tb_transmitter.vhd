@@ -21,11 +21,10 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.numeric_std.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -76,6 +75,11 @@ signal stream_out : std_logic_vector(7 downto 0);
 signal data_valid : std_logic;
 signal enable_shift_byte : std_logic;
 
+---------------Path for every documents--------------------
+--signal PATH_BCH_only : string := "C:\Users\max95\OneDrive\Documents\Personnel\Etudes\ENSEIRB\03_SEE_3A\EN321_Systeme_embarque_pour_les_telecommunications\TP\test_files\BCH_only.txt";
+--signal PATH_Entrelaceur_only : string := "C:\Users\max95\OneDrive\Documents\Personnel\Etudes\ENSEIRB\03_SEE_3A\EN321_Systeme_embarque_pour_les_telecommunications\TP\test_files\Entrelaceur_only.txt";
+--signal PATH_Coder_conv_only : string := "C:\Users\max95\OneDrive\Documents\Personnel\Etudes\ENSEIRB\03_SEE_3A\EN321_Systeme_embarque_pour_les_telecommunications\TP\test_files\Codeur_conv_only.txt";
+
 begin
 
 rst <= '1', '0' after 131 ns;
@@ -100,7 +104,7 @@ counters : process (clk, rst) begin
     end if;
 end process;
 
-input_file : read_int_file generic map("C:\Users\max95\OneDrive\Documents\Personnel\Etudes\ENSEIRB\03_SEE_3A\EN321_Systeme_embarque_pour_les_telecommunications\TP\test_files\codeur_conv.txt", 1, 255, 8)
+input_file : read_int_file generic map("C:\Users\max95\OneDrive\Documents\Personnel\Etudes\ENSEIRB\03_SEE_3A\EN321_Systeme_embarque_pour_les_telecommunications\TP\test_files\Entrelaceur_only.txt", 1, 255, 8)
 port map(clk, rst, enable_read_byte, incoming_byte);
 
 delay : process (clk, rst) begin

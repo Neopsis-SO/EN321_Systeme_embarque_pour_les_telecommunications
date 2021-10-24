@@ -3,7 +3,7 @@ USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 USE std.textio.ALL;
 
-LIBRARY work;
+LIBRARY xil_defaultlib;
 USE work.txt_util.ALL;
 
 entity read_int_file is

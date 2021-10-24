@@ -156,22 +156,25 @@ begin
 --------------------------------------------
 
 --------------------------------------------
------------BCH and Entrelaceur--------------
+-----------------BCH only-------------------
 --------------------------------------------
-bch_enc : hamenc port map(rst => rst,
-                          clk => clk,
-                          i_data => stream_in(3 downto 0),
-                          i_dv => enable,
-                          o_data => bch_out,
-                          o_dv => bch_out_dv);
+--bch_enc_test : hamenc port map(rst => rst,
+--                          clk => clk,
+--                          i_data => stream_in(3 downto 0),
+--                          i_dv => enable,
+--                          o_data => stream_out,
+--                          o_dv => data_valid);
 
-intrl : entrelaceur port map( iClock => clk,
+--------------------------------------------
+-------------Entrelaceur only---------------
+--------------------------------------------
+intrl_test : entrelaceur port map( iClock => clk,
                               iReset => rst,
-                              iEN => bch_out_dv,
-                              par_data => bch_out(6 downto 0),
+                              iEN => enable,
+                              par_data => stream_in(6 downto 0),
                               serial_data => stream_out(0),
                               serial_data_valid => data_valid);
-
+							  
 stream_out(7 downto 1) <= (others => '0');
 
 --------------------------------------------
@@ -188,6 +191,25 @@ stream_out(7 downto 1) <= (others => '0');
 --stream_out(0) <= x1;
 --stream_out(1) <= x2;
 --data_valid <= enable;
+
+--------------------------------------------
+-----------BCH and Entrelaceur--------------
+--------------------------------------------
+--bch_enc : hamenc port map(rst => rst,
+--                          clk => clk,
+--                          i_data => stream_in(3 downto 0),
+--                          i_dv => enable,
+--                          o_data => bch_out,
+--                          o_dv => bch_out_dv);
+
+--intrl : entrelaceur port map( iClock => clk,
+--                              iReset => rst,
+--                              iEN => bch_out_dv,
+--                              par_data => bch_out(6 downto 0),
+--                              serial_data => stream_out(0),
+--                              serial_data_valid => data_valid);
+
+--stream_out(7 downto 1) <= (others => '0');
 
 --------------------------------------------
 --------------------------------------------
