@@ -106,47 +106,48 @@ signal tb_selected_bit : std_logic;
 
 begin
 
---scramb : scrambler port map(  iClock => clk,
---                              iReset => rst,
---                              iEN => enable,
---                              iData => stream_in(0),
---                              oDataValid => scrambler_out_dv,--data_valid,--scrambler_out_dv
---                              oData  => scrambler_out);--stream_out(0));--scrambler_out
+scramb : scrambler port map(  iClock => clk,
+                              iReset => rst,
+                              iEN => enable,
+                              iData => stream_in(0),
+                              oDataValid => scrambler_out_dv,
+                              oData  => scrambler_out);
  
---s2p_inst : S2P generic map(width => 4)
---               port map( clk => clk,
---                         reset => rst,
---                         i_data_valid => scrambler_out_dv,
---                         serial_data => scrambler_out,
---                         par_data => S2P_out,
---                         o_data_valid => S2P_out_dv);
+s2p_inst : S2P generic map(width => 4)
+               port map( clk => clk,
+                         reset => rst,
+                         i_data_valid => scrambler_out_dv,
+                         serial_data => scrambler_out,
+                         par_data => S2P_out,
+                         o_data_valid => S2P_out_dv);
 
---bch_enc : hamenc port map(rst => rst,
---                          clk => clk,
---                          i_data => S2P_out,
---                          i_dv => S2P_out_dv,
---                          o_data => bch_out,
---                          o_dv => bch_out_dv);
+bch_enc : hamenc port map(rst => rst,
+                          clk => clk,
+                          i_data => S2P_out,
+                          i_dv => S2P_out_dv,
+                          o_data => bch_out,
+                          o_dv => bch_out_dv);
 
---intrl : entrelaceur port map( iClock => clk,
---                              iReset => rst,
---                              iEN => bch_out_dv,
---                              par_data => bch_out(6 downto 0),
---                              serial_data => intrl_out,
---                              serial_data_valid => entrelaceur_out_dv);
+intrl : entrelaceur port map( iClock => clk,
+                              iReset => rst,
+                              iEN => bch_out_dv,
+                              par_data => bch_out(6 downto 0),
+                              serial_data => intrl_out,
+                              serial_data_valid => entrelaceur_out_dv);
                               
---cc : codeur_conv port map(	  iClock => clk,
---                              iReset => rst,
---                              iEN => entrelaceur_out_dv,
---                              iData => intrl_out,
---                              oDataX => x1,
---                              oDataY => x2);
+cc : codeur_conv port map(	  iClock => clk,
+                              iReset => rst,
+                              iEN => entrelaceur_out_dv,
+                              iData => intrl_out,
+                              oDataX => x1,
+                              oDataY => x2);
 
---stream_out(7 downto 1) <= (others => '0');
+stream_out(7 downto 2) <= (others => '0');
 
---stream_out(0) <= x1;
+stream_out(0) <= x1;
+stream_out(1) <= x2;
 
---data_valid <= p2s_out_dv;
+data_valid <= entrelaceur_out_dv;
 
 
 ---------------Test part--------------------
@@ -168,14 +169,14 @@ begin
 --------------------------------------------
 -------------Entrelaceur only---------------
 --------------------------------------------
-intrl_test : entrelaceur port map( iClock => clk,
-                              iReset => rst,
-                              iEN => enable,
-                              par_data => stream_in(6 downto 0),
-                              serial_data => stream_out(0),
-                              serial_data_valid => data_valid);
+--intrl_test : entrelaceur port map( iClock => clk,
+--                              iReset => rst,
+--                              iEN => enable,
+--                              par_data => stream_in(6 downto 0),
+--                              serial_data => stream_out(0),
+--                              serial_data_valid => data_valid);
 							  
-stream_out(7 downto 1) <= (others => '0');
+--stream_out(7 downto 1) <= (others => '0');
 
 --------------------------------------------
 -------------Coder_conv only----------------
