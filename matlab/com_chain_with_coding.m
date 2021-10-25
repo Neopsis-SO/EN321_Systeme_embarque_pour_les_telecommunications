@@ -39,7 +39,7 @@ NFFT=64;
 
 nb=2; % number of bits per symbol
 disp('Code MAC binaire correspondant � la modulation num�rique : ')
-b0_b2=dec2bin(nb,3)
+b0_b2=de2bi(nb,3,'left-msb')
 
 M=2^nb;
 type_mod='psk';
@@ -123,14 +123,13 @@ V_soft = [U_soft, padding_bits];
 V_soft_size = length(V_soft);
 
 %% Write UART
-% s = send_UART(V_soft,V_soft_size)
+%s = send_UART(V_soft,V_soft_size)
 
 %% Scrambler
 S_soft=step(Scrambler_U_obj,V_soft.');
 
 %% Read UART
-% S_hard=recv_UART(s, V_soft_size);
-% test = V_soft - S_hard'
+%S_hard=recv_UART(s, V_soft_size);
 %S_soft = S_hard;
 
 %% BCH Encoder
@@ -140,26 +139,35 @@ X_soft = double( X_gf_soft.x );
 %% Interleaver
 P_soft=convintrlv([reshape(X_soft.',1,[])],intlvr_line_nb,intlvr_reg_size);
 
-%% Write UART CONVOLUTION TEST
-s = send_UART(P_soft,length(P_soft))
-
 %% Convolutionnal Encoder
 C_soft = convenc(P_soft,trellis);
 
-%% Read UART CONVOLUTION TEST
-C_hard = recv_UART(s, bch_bit_nb);
-C_hard = reshape(de2bi(C_hard)',1,[])
-test = C_soft(1:end) - C_hard(1:end)
-C_soft = C_hard;
+%% Read UART
+%C_hard = recv_UART(s, bch_bit_nb);
+%C_hard = reshape(de2bi(C_hard)',1,[])
+%C_soft= C_hard
+
 
 %% OFDM Modulator 
 % No OFDM here
+% % Vérification du nombre de bits padding
+% verif = mod(size(C_soft,2),NFFT);
+% 
+% if verif == 0
+%     k = C_soft/NFFT;
+%     nb_bit_padding = mod(k,nb)*NFFT;
+% else
+%     nb_bit_padding = NFFT+verif;
+% end
 
+nb_bit_padding = 64;
+padding = randi([0,1],1,nb_bit_padding);
+C_soft_padding = [C_soft padding];
 
 %%%--------------------------------------------------------------------%%%%
 %%- DIGITAL MODULATION
 %%%---------------------------------------------------------------------%%%
-X=bi2de(reshape(C_soft.',length(C_soft)/nb,nb),'left-msb').'; % bit de poids fort � gauche
+X=bi2de(reshape(C_soft_padding.',length(C_soft_padding)/nb,nb),'left-msb').'; % bit de poids fort � gauche
 init_phase=0;
 if type_mod=='psk'
     if nb==2
@@ -173,6 +181,31 @@ else
     s=[];
 end
 
+%%%--------------------------------------------------------------------%%%%
+%%- IFFT
+%%%---------------------------------------------------------------------%%%
+
+Nb_port_utiles = 64;
+Nb_symbole = 4;
+
+mat_ifft = reshape(symb_utiles, Nb_port_utiles, Nb_symbole);
+for i=1:Nb_symbole
+   symb_ofdm(:,i) = ifft(mat_ifft(:,i));
+end
+symb_ofdm_tx = reshape(symb_ofdm,1,length(symb_utiles));
+
+%% Affichage en sortie du modulateur
+figure,
+polar(real(symb_ofdm_tx),'*')
+title('Partie réelle en sortie du modulateur');
+
+figure,
+polar(imag(symb_ofdm_tx),'*')
+title('Partie imaginaire en sortie du modulateur');
+
+figure,
+hist(real(symb_ofdm_tx), 50)
+title('Partie réelle en sortie du modulateur');
 
 %%
 %%%--------------------------------------------------------------------%%%%
@@ -180,25 +213,38 @@ end
 %%%---------------------------------------------------------------------%%%
 h = 1; % discrete channel without multi-path
 % h=sqrt(1/(2*L))*(randn(1,L)+1i*randn(1,L)); % discrete channel with multi-path
-y = filter(h,1,symb_utiles);
+y = filter(h,1,symb_ofdm_tx);
        
 %%
 %%%--------------------------------------------------------------------%%%%
 %% RECEIVER
 %%%---------------------------------------------------------------------%%%
-noise_variance = 0.2
+noise_variance = 2e-4;
 noise = sqrt(noise_variance/(2))*(randn(size(y))+1i*randn(size(y)));
 z = y + noise; 
 
 %% OFDM Demodulator 
-% No OFDM here
+mat_ifft = reshape(z, Nb_port_utiles, Nb_symbole);
+for i=1:Nb_symbole
+   symb_ofdm_r(:,i) = fft(mat_ifft(:,i));
+end
+symb_ofdm_rx = reshape(symb_ofdm_r,1,length(z));
+
+%% Affichage en sortie du démodulateur
+figure,
+plot(real(symb_ofdm_rx), imag(symb_ofdm_rx),'*')
+title('Symboles en sortie du démodulateur');
+
+figure,
+compass(symb_ofdm_rx,'*')
+title('Symboles en sortie du démodulateur');
 
 %% Channel equalizer
 % No channel equalization
 
 %% Demodulation
 
-symb_U_Rx = z;
+symb_U_Rx = symb_ofdm_rx;
 
 init_phase = 0;
 if type_mod=='psk'
@@ -215,6 +261,7 @@ else
 end
 
 C_r_soft=reshape(X.',1,[]);
+C_r_soft = C_r_soft(1:(length(C_r_soft)-nb_bit_padding));
 
 
 %% Viterbi Decoding
@@ -287,7 +334,6 @@ elseif(data_mode == 'color_image')
     image(uint8(img2send)-imgRx)
 end
 title('diff des images')
-
 
 %% BER results
 disp('--------------------------------------------------------------------')
