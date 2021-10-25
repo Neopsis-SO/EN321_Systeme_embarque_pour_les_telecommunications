@@ -123,13 +123,14 @@ V_soft = [U_soft, padding_bits];
 V_soft_size = length(V_soft);
 
 %% Write UART
-%s = send_UART(V_soft,V_soft_size)
+s = send_UART(V_soft,V_soft_size)
 
 %% Scrambler
 S_soft=step(Scrambler_U_obj,V_soft.');
 
-%% Read UART
-%S_hard=recv_UART(s, V_soft_size);
+%% Read UART SCRAMBLER TEST
+% S_hard = recv_UART(s, V_soft_size);
+% test = V_soft - S_hard'
 %S_soft = S_hard;
 
 %% BCH Encoder
@@ -139,14 +140,17 @@ X_soft = double( X_gf_soft.x );
 %% Interleaver
 P_soft=convintrlv([reshape(X_soft.',1,[])],intlvr_line_nb,intlvr_reg_size);
 
+%% Write UART CONVOLUTION TEST
+% s = send_UART(P_soft,length(P_soft))
+
 %% Convolutionnal Encoder
 C_soft = convenc(P_soft,trellis);
 
 %% Read UART
-%C_hard = recv_UART(s, bch_bit_nb);
-%C_hard = reshape(de2bi(C_hard)',1,[])
-%C_soft= C_hard
-
+C_hard = recv_UART(s, bch_bit_nb);
+C_hard = reshape(de2bi(C_hard)',1,[]);
+test = C_soft - C_hard;
+C_soft = C_hard;
 
 %% OFDM Modulator 
 % No OFDM here
