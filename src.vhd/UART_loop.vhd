@@ -80,6 +80,15 @@ component transmitter is
            data_valid : out std_logic);
 end component;
 
+component receiver is
+    Port ( rst : in STD_LOGIC;
+           clk : in STD_LOGIC;
+           enable : in STD_LOGIC;
+           stream_in : in STD_LOGIC_VECTOR(7 downto 0);
+           stream_out : out STD_LOGIC_VECTOR(7 downto 0);
+           data_valid : out std_logic);
+end component;
+
 -- Only to test our transmission chain with matlab
 --component register_8bits is
 --    Port ( rst : in STD_LOGIC;
@@ -127,13 +136,20 @@ begin
 		                    dat => dat,
 		                    dat_en => dat_en);
 		                    
-	trans : transmitter port map( rst => rst,
+--	trans_num : transmitter port map( rst => rst,
+--		                      clk => clk,
+--		                      enable => dat_en,
+--		                      stream_in => dat,
+--		                      stream_out => sent_byte,
+--		                      data_valid => data_valid);          
+
+    recv_num : receiver port map( rst => rst,
 		                      clk => clk,
 		                      enable => dat_en,
 		                      stream_in => dat,
 		                      stream_out => sent_byte,
-		                      data_valid => data_valid);          
-
+		                      data_valid => data_valid);  
+		                      
 -- Only to test our transmission chain with matlab (need to hide trans)	                
 --	reg : register_8bits port map( rst => rst,
 --		                      clk => clk,
