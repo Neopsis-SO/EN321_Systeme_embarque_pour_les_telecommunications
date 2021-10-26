@@ -123,7 +123,7 @@ V_soft = [U_soft, padding_bits];
 V_soft_size = length(V_soft);
 
 %% Write UART
-s = send_UART(V_soft,V_soft_size)
+% s = send_UART(V_soft,V_soft_size)
 
 %% Scrambler
 S_soft=step(Scrambler_U_obj,V_soft.');
@@ -147,10 +147,10 @@ P_soft=convintrlv([reshape(X_soft.',1,[])],intlvr_line_nb,intlvr_reg_size);
 C_soft = convenc(P_soft,trellis);
 
 %% Read UART
-C_hard = recv_UART(s, bch_bit_nb);
-C_hard = reshape(de2bi(C_hard)',1,[]);
-test = C_soft - C_hard;
-C_soft = C_hard;
+% C_hard = recv_UART(s, bch_bit_nb);
+% C_hard = reshape(de2bi(C_hard)',1,[]);
+% test = C_soft - C_hard;
+% C_soft = C_hard;
 
 %% OFDM Modulator 
 % No OFDM here
@@ -191,12 +191,16 @@ end
 
 Nb_port_utiles = 64;
 Nb_symbole = 4;
+size_channel = 30;
 
 mat_ifft = reshape(symb_utiles, Nb_port_utiles, Nb_symbole);
 for i=1:Nb_symbole
    symb_ofdm(:,i) = ifft(mat_ifft(:,i));
 end
-symb_ofdm_tx = reshape(symb_ofdm,1,length(symb_utiles));
+size_ofdm = size(symb_ofdm,1);
+pref_cycl = symb_ofdm(size_ofdm-size_channel:size_ofdm,:);
+symb_ofdm = [pref_cycl; symb_ofdm];
+symb_ofdm_tx = reshape(symb_ofdm,1,size(symb_ofdm,1)*size(symb_ofdm,2));
 
 %% Affichage en sortie du modulateur
 figure,
@@ -215,8 +219,8 @@ title('Partie réelle en sortie du modulateur');
 %%%--------------------------------------------------------------------%%%%
 %%- CHANNEL (normalized channel : average power)
 %%%---------------------------------------------------------------------%%%
-h = 1; % discrete channel without multi-path
-% h=sqrt(1/(2*L))*(randn(1,L)+1i*randn(1,L)); % discrete channel with multi-path
+% h = 1; % discrete channel without multi-path
+h=sqrt(1/(2*L))*(randn(1,L)+1i*randn(1,L)); % discrete channel with multi-path
 y = filter(h,1,symb_ofdm_tx);
        
 %%
@@ -228,24 +232,26 @@ noise = sqrt(noise_variance/(2))*(randn(size(y))+1i*randn(size(y)));
 z = y + noise; 
 
 %% OFDM Demodulator 
-mat_ifft = reshape(z, Nb_port_utiles, Nb_symbole);
+mat_ifft = reshape(z, Nb_port_utiles+size(pref_cycl,1), Nb_symbole);
+mat_ifft = mat_ifft(size(pref_cycl,1)+1:Nb_port_utiles+size(pref_cycl,1),:);
 for i=1:Nb_symbole
    symb_ofdm_r(:,i) = fft(mat_ifft(:,i));
 end
-symb_ofdm_rx = reshape(symb_ofdm_r,1,length(z));
+
+%% Channel Equalizer
+
+H = fft(h,NFFT); % Coefficients du filtre ramené en plan de fourier
+
+for i=1:Nb_symbole
+   symb_ofdm_r(:,i) =  symb_ofdm_r(:,i).'./H;
+end
+
+symb_ofdm_rx = reshape(symb_ofdm_r,1,Nb_symbole*Nb_port_utiles);
 
 %% Affichage en sortie du démodulateur
 figure,
 plot(real(symb_ofdm_rx), imag(symb_ofdm_rx),'*')
 title('Symboles en sortie du démodulateur');
-
-figure,
-compass(symb_ofdm_rx,'*')
-title('Symboles en sortie du démodulateur');
-
-%% Channel equalizer
-% No channel equalization
-
 %% Demodulation
 
 symb_U_Rx = symb_ofdm_rx;
