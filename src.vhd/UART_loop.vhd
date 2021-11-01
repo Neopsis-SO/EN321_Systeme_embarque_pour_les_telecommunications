@@ -89,18 +89,21 @@ component receiver is
            data_valid : out std_logic);
 end component;
 
-signal dat_en, busy : std_logic;
-signal dat : std_logic_vector(7 downto 0);
+signal SIG_SW : std_logic_vector(1 downto 0);
+signal rst_tx, rst_rx : std_logic;
+signal dat_en, dat_en_tx, dat_en_rx : std_logic;
+signal dat, dat_tx, dat_rx : std_logic_vector(7 downto 0);
 signal scrambled_bit : std_logic;
-signal sent_byte : std_logic_vector(7 downto 0);
-signal data_valid : std_logic;
+signal sent_byte, sent_byte_tx, sent_byte_rx : std_logic_vector(7 downto 0);
+signal data_valid, data_valid_tx, data_valid_rx : std_logic;
 signal en_counter : unsigned(13 downto 0) := (others => '0');
 
 signal fifo_empty, fifo_afull, fifo_full : std_logic;
 
 begin
 
-
+    SIG_SW <= sw;
+    
 	enable_counters:
 	process (clk, rst) begin
 		if (rising_edge(clk)) then
@@ -126,21 +129,46 @@ begin
 		                    dat => dat,
 		                    dat_en => dat_en);
 		                    
---	trans_num : transmitter port map( rst => rst,
---		                      clk => clk,
---		                      enable => dat_en,
---		                      stream_in => dat,
---		                      stream_out => sent_byte,
---		                      data_valid => data_valid);          
-
-    recv_num : receiver port map( rst => rst,
+	trans_num : transmitter port map( rst => rst_tx,
 		                      clk => clk,
-		                      enable => dat_en,
-		                      stream_in => dat,
-		                      stream_out => sent_byte,
-		                      data_valid => data_valid);  
+		                      enable => dat_en_tx,
+		                      stream_in => dat_tx,
+		                      stream_out => sent_byte_tx,
+		                      data_valid => data_valid_tx);          
+
+    recv_num : receiver port map( rst => rst_rx,
+		                      clk => clk,
+		                      enable => dat_en_rx,
+		                      stream_in => dat_rx,
+		                      stream_out => sent_byte_rx,
+		                      data_valid => data_valid_rx);  
 		                      
-		                      	                      
+trans_receiv_choose : process (sw, dat_en, dat, sent_byte_tx, data_valid_tx, sent_byte_rx, data_valid_rx)
+begin
+    if(SIG_SW = "00") then
+        dat_en_tx  <= dat_en;
+        dat_tx     <= dat;
+        sent_byte  <= sent_byte_tx;
+        data_valid <= data_valid_tx;
+    else
+        dat_en_rx  <= dat_en;
+        dat_rx     <= dat;
+        sent_byte  <= sent_byte_rx;
+        data_valid <= data_valid_rx;
+    end if;
+end process;
+
+rst_gestion : process (rst, sw)
+begin
+    if(SIG_SW = "00") then
+        rst_rx <= '1';
+        rst_tx <= rst;
+    else
+        rst_tx <= '1';
+        rst_rx <= rst;
+    end if;
+end process;
+                      	                      
 	send : UART_fifoed_send Generic map( fifo_size => 4096,
 					      fifo_almost => 8,
 					      drop_oldest_when_full => false,
