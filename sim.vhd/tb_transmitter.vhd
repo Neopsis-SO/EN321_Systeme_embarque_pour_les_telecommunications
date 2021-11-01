@@ -74,6 +74,7 @@ signal enable_read_byte : std_logic;
 signal stream_out : std_logic_vector(7 downto 0); 
 signal data_valid : std_logic;
 signal enable_shift_byte : std_logic;
+signal counter_limit : integer := 10; --156
 
 ---------------Path for every documents--------------------
 --signal PATH_BCH_only : string := "C:\Users\max95\OneDrive\Documents\Personnel\Etudes\ENSEIRB\03_SEE_3A\EN321_Systeme_embarque_pour_les_telecommunications\TP\test_files\BCH_only.txt";
@@ -93,7 +94,7 @@ counters : process (clk, rst) begin
         enable_read_byte <= '0';		
     elsif (rising_edge(clk)) then
         if(enable = '1') then
-            if(counter = 156) then
+            if(counter = counter_limit) then
                 counter <= (others => '0');
                 enable_read_byte <= '1';			
             else

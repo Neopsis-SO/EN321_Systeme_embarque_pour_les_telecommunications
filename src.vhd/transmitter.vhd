@@ -42,6 +42,17 @@ end transmitter;
 
 architecture Behavioral of transmitter is   
 
+-- Only to test our transmission chain with matlab (can to be hide)
+component register_8bits is
+    Port ( rst : in STD_LOGIC;
+           clk : in STD_LOGIC;
+           enable : in STD_LOGIC;
+           stream_in : in STD_LOGIC_VECTOR(7 downto 0);
+           stream_out : out STD_LOGIC_VECTOR(7 downto 0);
+           data_valid : out std_logic);
+end component;
+-- Only to test our transmission chain with matlab (can to be hide)
+
 component scrambler is
 port(
    iClock            : in	std_logic;
@@ -102,7 +113,6 @@ signal bch_out : std_logic_vector(7 downto 0);
 signal p2s_out : std_logic;
 signal intrl_out : std_logic;
 signal x1, x2 : std_logic;
-signal tb_selected_bit : std_logic;
 
 begin
 
@@ -157,14 +167,42 @@ data_valid <= entrelaceur_out_dv;
 --------------------------------------------
 
 --------------------------------------------
+-----------COMMUNICATION only---------------
+--------------------------------------------           
+--	reg_test : register_8bits port map( rst => rst,
+--		                      clk => clk,
+--		                      enable => enable,
+--		                      stream_in => stream_in,
+--		                      stream_out => stream_out,
+--		                      data_valid => data_valid);
+
+--------------------------------------------
+-------------SCRAMBLER only-----------------
+--------------------------------------------           
+--scramb_test : scrambler port map(  iClock => clk,
+--                              iReset => rst,
+--                              iEN => enable,
+--                              iData => stream_in(0),
+--                              oDataValid => scrambler_out_dv,
+--                              oData  => scrambler_out);
+
+--stream_out(7 downto 1) <= (others => '0');
+--stream_out(0) <= scrambler_out;
+
+--data_valid <= scrambler_out_dv;
+
+--------------------------------------------
 -----------------BCH only-------------------
 --------------------------------------------
 --bch_enc_test : hamenc port map(rst => rst,
 --                          clk => clk,
 --                          i_data => stream_in(3 downto 0),
 --                          i_dv => enable,
---                          o_data => stream_out,
---                          o_dv => data_valid);
+--                          o_data => bch_out,
+--                          o_dv => bch_out_dv);
+
+--stream_out <= bch_out;
+--data_valid <= bch_out_dv;
 
 --------------------------------------------
 -------------Entrelaceur only---------------
@@ -189,8 +227,8 @@ data_valid <= entrelaceur_out_dv;
 --                              oDataY => x2);
 							  
 --stream_out(7 downto 2) <= (others => '0');
---stream_out(0) <= x1;
 --stream_out(1) <= x2;
+--stream_out(0) <= x1;
 --data_valid <= enable;
 
 --------------------------------------------
