@@ -105,7 +105,7 @@ counters : process (clk, rst) begin
     end if;
 end process;
 
-input_file : read_int_file generic map("C:\Users\max95\OneDrive\Documents\Personnel\Etudes\ENSEIRB\03_SEE_3A\EN321_Systeme_embarque_pour_les_telecommunications\TP\test_files\Entrelaceur_only.txt", 1, 255, 8)
+input_file : read_int_file generic map("C:\Users\max95\OneDrive\Documents\Personnel\Etudes\ENSEIRB\03_SEE_3A\EN321_Systeme_embarque_pour_les_telecommunications\TP\test_files\P2S_BCH_inv_S2P.txt", 1, 255, 8)
 port map(clk, rst, enable_read_byte, incoming_byte);
 
 delay : process (clk, rst) begin

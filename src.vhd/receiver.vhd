@@ -101,6 +101,8 @@ signal p2s_out : std_logic;
 signal intrl_out : std_logic;
 signal x1, x2 : std_logic;
 signal tb_selected_bit : std_logic;
+signal s2p_out_raw : std_logic_vector (7 downto 0);
+signal bch_out_raw : std_logic_vector (3 downto 0);
 
 begin
 
@@ -134,24 +136,51 @@ begin
 --		                      data_valid => data_valid);
 
 --------------------------------------------
---------------BCH INV only------------------
+--------------BCH_INV only------------------
+--------------------------------------------
+
+--bch_inv_test : hamenc_inv port map(rst => rst,
+--                          clk => clk,
+--                          i_data => stream_in,
+--                          i_dv => enable,
+--                          o_data => stream_out(3 downto 0),
+--                          o_dv => data_valid);
+                          
+--stream_out(7 downto 4) <= (others => '0');
+
+--------------------------------------------
+----------P2S BCH_INV and S2P---------------
 --------------------------------------------
 S2P_test : S2P generic map(width => 7)
                port map( clk => clk,
                          reset => rst,
                          i_data_valid => enable,
                          serial_data => stream_in(0),
-                         par_data => S2P_out(6 DOWNTO 0),
+                         par_data => s2p_out_raw(6 DOWNTO 0),
                          o_data_valid => S2P_out_dv);
 
+----S2P_out(0) <= s2p_out_raw(6);
+----S2P_out(1) <= s2p_out_raw(5);
+----S2P_out(2) <= s2p_out_raw(4);
+----S2P_out(3) <= s2p_out_raw(3);
+----S2P_out(4) <= s2p_out_raw(2);
+----S2P_out(5) <= s2p_out_raw(1);
+----S2P_out(6) <= s2p_out_raw(0);
 S2P_out(7) <= '0';
+S2P_out(6 downto 0) <= s2p_out_raw(6 downto 0);
                          
 bch_inv_test : hamenc_inv port map(rst => rst,
                           clk => clk,
                           i_data => S2P_out,
                           i_dv => S2P_out_dv,
-                          o_data => bch_out,
+                          o_data => bch_out_raw,
                           o_dv => bch_out_dv);
+
+--bch_out(3) <= bch_out_raw(0);
+--bch_out(2) <= bch_out_raw(1);
+--bch_out(1) <= bch_out_raw(2);
+--bch_out(0) <= bch_out_raw(3);
+bch_out <= bch_out_raw;
 
 P2S_test : P2S generic map(width => 4)
                port map( clk => clk,

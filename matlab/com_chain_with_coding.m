@@ -122,8 +122,13 @@ bch_bit_nb = bch_cwd_nb * bch_n;
 V_soft = [U_soft, padding_bits];
 V_soft_size = length(V_soft);
 
-%% Write UART
-% s = send_UART(V_soft,V_soft_size)
+%% Write TX UART
+% s = send_UART(V_soft, V_soft_size)
+
+%% Read UART REGISTER TEST
+% V_hard = recv_UART(s, V_soft_size);
+% test = V_soft - V_hard';
+% V_soft = V_hard';
 
 %% Scrambler
 S_soft=step(Scrambler_U_obj,V_soft.');
@@ -131,7 +136,7 @@ S_soft=step(Scrambler_U_obj,V_soft.');
 %% Read UART SCRAMBLER TEST
 % S_hard = recv_UART(s, V_soft_size);
 % test = V_soft - S_hard'
-%S_soft = S_hard;
+% S_soft = S_hard;
 
 %% BCH Encoder
 X_gf_soft = bchenc(gf(reshape(S_soft, bch_k, bch_cwd_nb).',1), bch_n, bch_k); % codeur BCH(bch_n,bch_k)
@@ -146,7 +151,7 @@ P_soft=convintrlv([reshape(X_soft.',1,[])],intlvr_line_nb,intlvr_reg_size);
 %% Convolutionnal Encoder
 C_soft = convenc(P_soft,trellis);
 
-%% Read UART
+%% Read TX UART
 % C_hard = recv_UART(s, bch_bit_nb);
 % C_hard = reshape(de2bi(C_hard)',1,[]);
 % test = C_soft - C_hard;
@@ -272,7 +277,15 @@ end
 
 C_r_soft=reshape(X.',1,[]);
 C_r_soft = C_r_soft(1:(length(C_r_soft)-nb_bit_padding));
+C_r_soft_size = length(C_r_soft);
 
+%% Write RX UART
+s = send_UART(C_r_soft,C_r_soft_size)
+
+%% Read UART REGISTER TEST
+% C_r_hard = recv_UART(s, C_r_soft_size);
+% test = C_r_soft - C_r_hard';
+% C_r_soft = C_r_hard';
 
 %% Viterbi Decoding
 
@@ -282,10 +295,18 @@ P_r_soft = vitdec(C_r_soft,trellis,trellis_depth,'trunc','hard');
 
 BER_U_A_Viterbi = mean(abs(P_soft-P_r_soft))
 
+%% Read UART Viterbi Decoding TEST
+P_r_hard = recv_UART(s, C_r_soft_size/2);
+test = P_r_soft - P_r_hard';
+P_r_soft = P_r_hard';
 
 %% Deinterleaving
 
 X_r_soft=convdeintrlv(P_r_soft,intlvr_line_nb,intlvr_reg_size);
+
+%% Write UART BCH DECODING TEST
+% s = send_UART(reshape(fliplr(reshape(X_r_soft,bch_n,bch_cwd_nb).'),1,[]),length(X_r_soft))
+% s = send_UART(X_r_soft, length(X_r_soft))
 
 %% BCH decoding
 
@@ -297,13 +318,31 @@ S_r_soft_Depad = S_r_soft_Depad_temp(intlvr_pad_bit_nb+1:end);
 S_r_soft_Depad = S_r_soft_Depad(1:end-bch_pad_bit_nb)
 %BER_U = mean(abs(S_r_soft_Depad-uint8(U_soft'))); % final BER
 
-%% Descrambler
+%% Read UART BCH DECODING TEST
+% S_r_hard_Depad = recv_UART(s, bch_cwd_nb*bch_k);
+% S_r_hard_Depad = uint8(S_r_hard_Depad);
+% S_r_hard_Depad = reshape(de2bi(S_r_hard_Depad),1,[]);
+% S_r_hard_Depad = S_r_hard_Depad(intlvr_pad_bit_nb+1:end);
+% S_r_hard_Depad = S_r_hard_Depad(1:end-bch_pad_bit_nb);
+% test = S_r_soft_Depad - S_r_hard_Depad;
+% S_r_soft_Depad = S_r_hard_Depad;
 
+%% Write UART DESCRAMBLEUR TEST
+% s = send_UART(S_r_soft_Depad,length(S_r_soft_Depad))
+
+%% Descrambler
 Descrambler_U_obj = comm.Descrambler(2,scramb_polynomial,scramb_init_state);
 
 S_r_soft_Depad=step(Descrambler_U_obj,S_r_soft_Depad.'); % descrambler
 
 BER_U = mean(abs(S_r_soft_Depad-uint8(U_soft')));
+
+%% Read RX UART
+% S_r_hard_Depad = recv_UART(s, length(S_r_soft_Depad));
+% S_r_hard_Depad = reshape(de2bi(S_r_hard_Depad),1,[]);
+% S_r_hard_Depad = uint8(S_r_hard_Depad).';
+% test = S_r_soft_Depad - S_r_hard_Depad;
+% S_r_soft_Depad = S_r_hard_Depad;
 
 %% Image reconstruction
 
@@ -353,3 +392,50 @@ disp('--------------------------------------------------------------------')
 fprintf('BER after Viterbi decoding: %d\n',(BER_U_A_Viterbi))
 fprintf('BER after BCH : %d\n',(BER_U))
 disp('--------------------------------------------------------------------')
+
+%% BCH matrice
+
+% bch_n=7;   % code block-length
+% bch_k=4;   % code dimension
+% 
+% m = [1 0 0 0;
+%      0 1 0 0;
+%      0 0 1 0;
+%      0 0 0 1];
+% 
+% G_gf = bchenc(gf(m,1), bch_n, bch_k); % codeur BCH(bch_n,bch_k)
+% G = double( G_gf.x )
+
+%% BCH matrice inverse
+
+% bch_n=7;   % code block-length
+% bch_k=4;   % code dimension
+% 
+% m = [1 0 0 0 0 0 0;
+%      0 1 0 0 0 0 0;
+%      0 0 1 0 0 0 0;
+%      0 0 0 1 0 0 0;
+%      0 0 0 0 1 0 0;
+%      0 0 0 0 0 1 0;
+%      0 0 0 0 0 0 1];
+%  
+% G_inv_gf = bchdec(gf(m,1),bch_n,bch_k); 
+% G_inv = double( G_inv_gf.x )
+
+%% BCH test
+% s = send_UART([0 0 0 0 0 0 1],7)
+% test = recv_UART(s, 4);
+
+% test_vector = [1 0 0 0 0 0 0;
+%                0 1 0 0 0 0 0;
+%                0 0 1 0 0 0 0;
+%                0 0 0 1 0 0 0;
+%                1 0 1 1 0 0 0];
+% test_vector = fliplr(test_vector);
+% 
+% S_r_soft_gf=bchdec(gf(test_vector,1),bch_n,bch_k); 
+% S_r_soft = uint8(S_r_soft_gf.x);
+% 
+% S_r_soft_Depad_temp = reshape(S_r_soft.',1,[]);
+% S_r_soft_Depad = S_r_soft_Depad_temp(intlvr_pad_bit_nb+1:end);
+% S_r_soft_Depad = S_r_soft_Depad(1:end-bch_pad_bit_nb)
