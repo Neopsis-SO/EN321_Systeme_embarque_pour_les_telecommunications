@@ -9,6 +9,8 @@
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+
+library xil_defaultlib;
 use work.definition_pkg.all;
 
 

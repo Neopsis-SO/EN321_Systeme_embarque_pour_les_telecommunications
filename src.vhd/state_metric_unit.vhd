@@ -10,6 +10,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.std_logic_unsigned.all;
+
+library xil_defaultlib;
 use work.definition_pkg.all;
 
 entity state_metric_unit is
