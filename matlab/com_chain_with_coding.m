@@ -123,7 +123,7 @@ V_soft = [U_soft, padding_bits];
 V_soft_size = length(V_soft);
 
 %% Write TX UART
-% s = send_UART(V_soft, V_soft_size)
+s = send_UART(V_soft, V_soft_size)
 
 %% Read UART REGISTER TEST
 % V_hard = recv_UART(s, V_soft_size);
@@ -152,10 +152,10 @@ P_soft=convintrlv([reshape(X_soft.',1,[])],intlvr_line_nb,intlvr_reg_size);
 C_soft = convenc(P_soft,trellis);
 
 %% Read TX UART
-% C_hard = recv_UART(s, bch_bit_nb);
-% C_hard = reshape(de2bi(C_hard)',1,[]);
-% test = C_soft - C_hard;
-% C_soft = C_hard;
+C_hard = recv_UART(s, bch_bit_nb);
+C_hard = reshape(de2bi(C_hard)',1,[]);
+test = C_soft - C_hard;
+C_soft = C_hard;
 
 %% OFDM Modulator 
 % No OFDM here
@@ -283,9 +283,9 @@ C_r_soft_size = length(C_r_soft);
 s = send_UART(C_r_soft,C_r_soft_size)
 
 %% Read UART REGISTER TEST
-% C_r_hard = recv_UART(s, C_r_soft_size);
-% test = C_r_soft - C_r_hard';
-% C_r_soft = C_r_hard';
+C_r_hard = recv_UART(s, C_r_soft_size);
+test = C_r_soft - C_r_hard';
+C_r_soft = C_r_hard';
 
 %% Viterbi Decoding
 
@@ -296,9 +296,9 @@ P_r_soft = vitdec(C_r_soft,trellis,trellis_depth,'trunc','hard');
 BER_U_A_Viterbi = mean(abs(P_soft-P_r_soft))
 
 %% Read UART Viterbi Decoding TEST
-P_r_hard = recv_UART(s, C_r_soft_size/2);
-test = P_r_soft - P_r_hard';
-P_r_soft = P_r_hard';
+% P_r_hard = recv_UART(s, C_r_soft_size/2);
+% test = P_r_soft - P_r_hard';
+% P_r_soft = P_r_hard';
 
 %% Deinterleaving
 
@@ -392,50 +392,3 @@ disp('--------------------------------------------------------------------')
 fprintf('BER after Viterbi decoding: %d\n',(BER_U_A_Viterbi))
 fprintf('BER after BCH : %d\n',(BER_U))
 disp('--------------------------------------------------------------------')
-
-%% BCH matrice
-
-% bch_n=7;   % code block-length
-% bch_k=4;   % code dimension
-% 
-% m = [1 0 0 0;
-%      0 1 0 0;
-%      0 0 1 0;
-%      0 0 0 1];
-% 
-% G_gf = bchenc(gf(m,1), bch_n, bch_k); % codeur BCH(bch_n,bch_k)
-% G = double( G_gf.x )
-
-%% BCH matrice inverse
-
-% bch_n=7;   % code block-length
-% bch_k=4;   % code dimension
-% 
-% m = [1 0 0 0 0 0 0;
-%      0 1 0 0 0 0 0;
-%      0 0 1 0 0 0 0;
-%      0 0 0 1 0 0 0;
-%      0 0 0 0 1 0 0;
-%      0 0 0 0 0 1 0;
-%      0 0 0 0 0 0 1];
-%  
-% G_inv_gf = bchdec(gf(m,1),bch_n,bch_k); 
-% G_inv = double( G_inv_gf.x )
-
-%% BCH test
-% s = send_UART([0 0 0 0 0 0 1],7)
-% test = recv_UART(s, 4);
-
-% test_vector = [1 0 0 0 0 0 0;
-%                0 1 0 0 0 0 0;
-%                0 0 1 0 0 0 0;
-%                0 0 0 1 0 0 0;
-%                1 0 1 1 0 0 0];
-% test_vector = fliplr(test_vector);
-% 
-% S_r_soft_gf=bchdec(gf(test_vector,1),bch_n,bch_k); 
-% S_r_soft = uint8(S_r_soft_gf.x);
-% 
-% S_r_soft_Depad_temp = reshape(S_r_soft.',1,[]);
-% S_r_soft_Depad = S_r_soft_Depad_temp(intlvr_pad_bit_nb+1:end);
-% S_r_soft_Depad = S_r_soft_Depad(1:end-bch_pad_bit_nb)

@@ -54,7 +54,7 @@ end component;
 -- Only to test our transmission chain with matlab (can be hide)
 
 component S2P is
-generic (width: integer := 7);
+generic (width: integer := 4);
 port (
 	clk : in std_logic;
 	reset : in std_logic;
@@ -83,40 +83,15 @@ component P2S is
            serial_data_valid : out STD_LOGIC);
 end component;
 
-component descrambler is
-port(
-   iClock            : in	std_logic;
-   iReset            : in	std_logic;
-   iEN      		 : in	std_logic;
-   iData           	 : in	std_logic;
-   oDataValid        : out  std_logic;
-   oData      		 : out	std_logic);
-end component;
-
-signal scrambler_out_dv, S2P_out_dv, bch_out_dv, p2s_out_dv, entrelaceur_out_dv : std_logic;
-signal scrambler_out : std_logic;
+signal S2P_out_dv, bch_out_dv, p2s_out_dv : std_logic;
 signal S2P_out : std_logic_vector(7 downto 0);
 signal bch_out : std_logic_vector(3 downto 0);
 signal p2s_out : std_logic;
-signal intrl_out : std_logic;
-signal x1, x2 : std_logic;
-signal tb_selected_bit : std_logic;
 signal s2p_out_raw : std_logic_vector (7 downto 0);
 signal bch_out_raw : std_logic_vector (3 downto 0);
 
+
 begin
-
---descramb : scrambler port map(  iClock => clk,
---                              iReset => rst,
---                              iEN => bch_out_dv,
---                              iData => p2s_out,
---                              oDataValid => scrambler_out_dv,
---                              oData  => scrambler_out);
-
---stream_out(7 downto 1) <= (others => '0');
---stream_out(0) <= scrambler_out;
-
---data_valid <= scrambler_out_dv;
 
 
 ---------------Test part--------------------
@@ -128,12 +103,12 @@ begin
 --------------------------------------------
 -----------COMMUNICATION only---------------
 --------------------------------------------           
---	reg_test : register_8bits port map( rst => rst,
---		                      clk => clk,
---		                      enable => enable,
---		                      stream_in => stream_in,
---		                      stream_out => stream_out,
---		                      data_valid => data_valid);
+	reg_test : register_8bits port map( rst => rst,
+		                      clk => clk,
+		                      enable => enable,
+		                      stream_in => stream_in,
+		                      stream_out => stream_out,
+		                      data_valid => data_valid);
 
 --------------------------------------------
 --------------BCH_INV only------------------
@@ -151,13 +126,13 @@ begin
 --------------------------------------------
 ----------P2S BCH_INV and S2P---------------
 --------------------------------------------
-S2P_test : S2P generic map(width => 7)
-               port map( clk => clk,
-                         reset => rst,
-                         i_data_valid => enable,
-                         serial_data => stream_in(0),
-                         par_data => s2p_out_raw(6 DOWNTO 0),
-                         o_data_valid => S2P_out_dv);
+--S2P_test : S2P generic map(width => 7)
+--               port map( clk => clk,
+--                         reset => rst,
+--                         i_data_valid => enable,
+--                         serial_data => stream_in(0),
+--                         par_data => s2p_out_raw(6 DOWNTO 0),
+--                         o_data_valid => S2P_out_dv);
 
 ----S2P_out(0) <= s2p_out_raw(6);
 ----S2P_out(1) <= s2p_out_raw(5);
@@ -166,50 +141,34 @@ S2P_test : S2P generic map(width => 7)
 ----S2P_out(4) <= s2p_out_raw(2);
 ----S2P_out(5) <= s2p_out_raw(1);
 ----S2P_out(6) <= s2p_out_raw(0);
-S2P_out(7) <= '0';
-S2P_out(6 downto 0) <= s2p_out_raw(6 downto 0);
+--S2P_out(7) <= '0';
+--S2P_out(6 downto 0) <= s2p_out_raw(6 downto 0);
                          
-bch_inv_test : hamenc_inv port map(rst => rst,
-                          clk => clk,
-                          i_data => S2P_out,
-                          i_dv => S2P_out_dv,
-                          o_data => bch_out_raw,
-                          o_dv => bch_out_dv);
+--bch_inv_test : hamenc_inv port map(rst => rst,
+--                          clk => clk,
+--                          i_data => S2P_out,
+--                          i_dv => S2P_out_dv,
+--                          o_data => bch_out_raw,
+--                          o_dv => bch_out_dv);
 
 --bch_out(3) <= bch_out_raw(0);
 --bch_out(2) <= bch_out_raw(1);
 --bch_out(1) <= bch_out_raw(2);
 --bch_out(0) <= bch_out_raw(3);
-bch_out <= bch_out_raw;
 
-P2S_test : P2S generic map(width => 4)
-               port map( clk => clk,
-                         reset => rst,
-                         load => bch_out_dv,
-                         par_data => bch_out,
-                         serial_data => p2s_out,
-                         serial_data_valid => p2s_out_dv);
+--P2S_test : P2S generic map(width => 4)
+--               port map( clk => clk,
+--                         reset => rst,
+--                         load => bch_out_dv,
+--                         par_data => bch_out,
+--                         serial_data => p2s_out,
+--                         serial_data_valid => p2s_out_dv);
 
 
-stream_out(7 downto 1) <= (others => '0');
-stream_out(0) <= p2s_out;
-
-data_valid <= p2s_out_dv;
-
---------------------------------------------
-------------DESCRAMBLEUR only---------------
---------------------------------------------
---descramb_test : descrambler port map(  iClock => clk,
---                              iReset => rst,
---                              iEN => enable,
---                              iData => stream_in(0),
---                              oDataValid => scrambler_out_dv,
---                              oData  => scrambler_out);
-                              
 --stream_out(7 downto 1) <= (others => '0');
---stream_out(0) <= scrambler_out;
+--stream_out(0) <= p2s_out;
 
---data_valid <= scrambler_out_dv;
+--data_valid <= p2s_out_dv;
 
 --------------------------------------------
 --------------------------------------------
