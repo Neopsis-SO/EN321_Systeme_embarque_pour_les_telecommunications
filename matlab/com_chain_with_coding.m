@@ -123,7 +123,7 @@ V_soft = [U_soft, padding_bits];
 V_soft_size = length(V_soft);
 
 %% Write TX UART
-s = send_UART(V_soft, V_soft_size)
+% s = send_UART(V_soft, V_soft_size)
 
 %% Read UART REGISTER TEST
 % V_hard = recv_UART(s, V_soft_size);
@@ -152,10 +152,10 @@ P_soft=convintrlv([reshape(X_soft.',1,[])],intlvr_line_nb,intlvr_reg_size);
 C_soft = convenc(P_soft,trellis);
 
 %% Read TX UART
-C_hard = recv_UART(s, bch_bit_nb);
-C_hard = reshape(de2bi(C_hard)',1,[]);
-test = C_soft - C_hard;
-C_soft = C_hard;
+% C_hard = recv_UART(s, bch_bit_nb);
+% C_hard = reshape(de2bi(C_hard)',1,[]);
+% test = C_soft - C_hard;
+% C_soft = C_hard;
 
 %% OFDM Modulator 
 % No OFDM here
@@ -300,12 +300,19 @@ BER_U_A_Viterbi = mean(abs(P_soft-P_r_soft))
 % test = P_r_soft - P_r_hard';
 % P_r_soft = P_r_hard';
 
-%% Deinterleaving
+%% Write UART Deinterleaving TEST
+s = send_UART(P_r_soft, length(P_r_soft))
 
+%% Deinterleaving
 X_r_soft=convdeintrlv(P_r_soft,intlvr_line_nb,intlvr_reg_size);
 
+%% Read UART Deinterleaving TEST
+X_r_hard = recv_UART(s, length(P_r_soft));
+test = X_r_soft - X_r_hard';
+X_r_soft = X_r_hard';
+
 %% Write UART BCH DECODING TEST
-s = send_UART(X_r_soft, length(X_r_soft))
+% s = send_UART(X_r_soft, length(X_r_soft))
 
 %% BCH decoding
 
@@ -318,13 +325,13 @@ S_r_soft_Depad = S_r_soft_Depad(1:end-bch_pad_bit_nb)
 %BER_U = mean(abs(S_r_soft_Depad-uint8(U_soft'))); % final BER
 
 %% Read UART BCH DECODING TEST
-S_r_hard_Depad = recv_UART(s, bch_cwd_nb*bch_k);
-S_r_hard_Depad = uint8(S_r_hard_Depad);
-S_r_hard_Depad = reshape(S_r_hard_Depad,1,[]);
-S_r_hard_Depad = S_r_hard_Depad(intlvr_pad_bit_nb+1:end);
-S_r_hard_Depad = S_r_hard_Depad(1:end-bch_pad_bit_nb);
-test = S_r_soft_Depad - S_r_hard_Depad;
-S_r_soft_Depad = S_r_hard_Depad;
+% S_r_hard_Depad = recv_UART(s, bch_cwd_nb*bch_k);
+% S_r_hard_Depad = uint8(S_r_hard_Depad);
+% S_r_hard_Depad = reshape(S_r_hard_Depad,1,[]);
+% S_r_hard_Depad = S_r_hard_Depad(intlvr_pad_bit_nb+1:end);
+% S_r_hard_Depad = S_r_hard_Depad(1:end-bch_pad_bit_nb);
+% test = S_r_soft_Depad - S_r_hard_Depad;
+% S_r_soft_Depad = S_r_hard_Depad;
 
 %% Write UART DESCRAMBLEUR TEST
 % s = send_UART(S_r_soft_Depad,length(S_r_soft_Depad))

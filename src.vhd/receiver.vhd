@@ -64,6 +64,18 @@ port (
 	o_data_valid : out std_logic);
 end component;
 
+component entrelaceur is
+generic (width: integer := 7);
+	port(
+		iClock : in std_logic;
+        iReset : in std_logic;
+        iEN    : in std_logic;
+        par_data : in std_logic_vector(width-1 downto 0);
+        serial_data : out std_logic;
+        serial_data_valid : out std_logic
+	 );
+end component;
+
 component hamenc_inv is
     Port ( rst    : in  std_logic;
            clk    : in  std_logic;
@@ -83,52 +95,52 @@ component P2S is
            serial_data_valid : out STD_LOGIC);
 end component;
 
-signal S2P_out_dv, bch_out_dv, p2s_out_dv : std_logic;
+signal S2P_out_dv, entrelaceur_out_dv, bch_out_dv, p2s_out_dv : std_logic;
 signal S2P_out : std_logic_vector(7 downto 0);
 signal bch_out : std_logic_vector(3 downto 0);
-signal p2s_out : std_logic;
+signal p2s_out, intrl_out : std_logic;
 signal s2p_out_raw : std_logic_vector (7 downto 0);
 signal bch_out_raw : std_logic_vector (3 downto 0);
 
 
 begin
 
-S2P_BCH_DEC : S2P generic map(width => 7)
-               port map( clk => clk,
-                         reset => rst,
-                         i_data_valid => enable,
-                         serial_data => stream_in(0),
-                         par_data => s2p_out_raw(6 DOWNTO 0),
-                         o_data_valid => S2P_out_dv);
+--S2P_BCH_DEC : S2P generic map(width => 7)
+--               port map( clk => clk,
+--                         reset => rst,
+--                         i_data_valid => enable,
+--                         serial_data => stream_in(0),
+--                         par_data => s2p_out_raw(6 DOWNTO 0),
+--                         o_data_valid => S2P_out_dv);
 
-S2P_out(7) <= '0';
-S2P_out(6 downto 0) <= s2p_out_raw(6 downto 0);
+--S2P_out(7) <= '0';
+--S2P_out(6 downto 0) <= s2p_out_raw(6 downto 0);
                          
-BCH_DEC : hamenc_inv port map(rst => rst,
-                          clk => clk,
-                          i_data => S2P_out,
-                          i_dv => S2P_out_dv,
-                          o_data => bch_out_raw,
-                          o_dv => bch_out_dv);
+--BCH_DEC : hamenc_inv port map(rst => rst,
+--                          clk => clk,
+--                          i_data => S2P_out,
+--                          i_dv => S2P_out_dv,
+--                          o_data => bch_out_raw,
+--                          o_dv => bch_out_dv);
 
-bch_out(3) <= bch_out_raw(0);
-bch_out(2) <= bch_out_raw(1);
-bch_out(1) <= bch_out_raw(2);
-bch_out(0) <= bch_out_raw(3);
+--bch_out(3) <= bch_out_raw(0);
+--bch_out(2) <= bch_out_raw(1);
+--bch_out(1) <= bch_out_raw(2);
+--bch_out(0) <= bch_out_raw(3);
 
-P2S_BCH_DEC : P2S generic map(width => 4)
-               port map( clk => clk,
-                         reset => rst,
-                         load => bch_out_dv,
-                         par_data => bch_out,
-                         serial_data => p2s_out,
-                         serial_data_valid => p2s_out_dv);
+--P2S_BCH_DEC : P2S generic map(width => 4)
+--               port map( clk => clk,
+--                         reset => rst,
+--                         load => bch_out_dv,
+--                         par_data => bch_out,
+--                         serial_data => p2s_out,
+--                         serial_data_valid => p2s_out_dv);
 
 
-stream_out(7 downto 1) <= (others => '0');
-stream_out(0) <= p2s_out;
+--stream_out(7 downto 1) <= (others => '0');
+--stream_out(0) <= p2s_out;
 
-data_valid <= p2s_out_dv;
+--data_valid <= p2s_out_dv;
 
 ---------------Test part--------------------
 --------------------------------------------
@@ -146,6 +158,38 @@ data_valid <= p2s_out_dv;
 --		                      stream_out => stream_out,
 --		                      data_valid => data_valid);
 
+
+--------------------------------------------
+----------P2S INTERLIVER_INC----------------
+--------------------------------------------
+S2P_test : S2P generic map(width => 7)
+               port map( clk => clk,
+                         reset => rst,
+                         i_data_valid => enable,
+                         serial_data => stream_in(0),
+                         par_data => s2p_out_raw(6 DOWNTO 0),
+                         o_data_valid => S2P_out_dv);
+
+S2P_out(0) <= s2p_out_raw(6);
+S2P_out(1) <= s2p_out_raw(5);
+S2P_out(2) <= s2p_out_raw(4);
+S2P_out(3) <= s2p_out_raw(3);
+S2P_out(4) <= s2p_out_raw(2);
+S2P_out(5) <= s2p_out_raw(1);
+S2P_out(6) <= s2p_out_raw(0);
+
+intrl : entrelaceur port map( iClock => clk,
+                              iReset => rst,
+                              iEN => S2P_out_dv,
+                              par_data => S2P_out(6 downto 0),
+                              serial_data => intrl_out,
+                              serial_data_valid => entrelaceur_out_dv);
+
+stream_out(7 downto 1) <= (others => '0');
+stream_out(0) <= intrl_out;
+
+data_valid <= entrelaceur_out_dv;
+      
 --------------------------------------------
 --------------BCH_INV only------------------
 --------------------------------------------
