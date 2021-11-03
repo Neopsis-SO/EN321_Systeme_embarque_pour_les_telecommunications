@@ -93,6 +93,42 @@ signal bch_out_raw : std_logic_vector (3 downto 0);
 
 begin
 
+S2P_BCH_DEC : S2P generic map(width => 7)
+               port map( clk => clk,
+                         reset => rst,
+                         i_data_valid => enable,
+                         serial_data => stream_in(0),
+                         par_data => s2p_out_raw(6 DOWNTO 0),
+                         o_data_valid => S2P_out_dv);
+
+S2P_out(7) <= '0';
+S2P_out(6 downto 0) <= s2p_out_raw(6 downto 0);
+                         
+BCH_DEC : hamenc_inv port map(rst => rst,
+                          clk => clk,
+                          i_data => S2P_out,
+                          i_dv => S2P_out_dv,
+                          o_data => bch_out_raw,
+                          o_dv => bch_out_dv);
+
+bch_out(3) <= bch_out_raw(0);
+bch_out(2) <= bch_out_raw(1);
+bch_out(1) <= bch_out_raw(2);
+bch_out(0) <= bch_out_raw(3);
+
+P2S_BCH_DEC : P2S generic map(width => 4)
+               port map( clk => clk,
+                         reset => rst,
+                         load => bch_out_dv,
+                         par_data => bch_out,
+                         serial_data => p2s_out,
+                         serial_data_valid => p2s_out_dv);
+
+
+stream_out(7 downto 1) <= (others => '0');
+stream_out(0) <= p2s_out;
+
+data_valid <= p2s_out_dv;
 
 ---------------Test part--------------------
 --------------------------------------------
@@ -103,12 +139,12 @@ begin
 --------------------------------------------
 -----------COMMUNICATION only---------------
 --------------------------------------------           
-	reg_test : register_8bits port map( rst => rst,
-		                      clk => clk,
-		                      enable => enable,
-		                      stream_in => stream_in,
-		                      stream_out => stream_out,
-		                      data_valid => data_valid);
+--	reg_test : register_8bits port map( rst => rst,
+--		                      clk => clk,
+--		                      enable => enable,
+--		                      stream_in => stream_in,
+--		                      stream_out => stream_out,
+--		                      data_valid => data_valid);
 
 --------------------------------------------
 --------------BCH_INV only------------------
@@ -134,13 +170,6 @@ begin
 --                         par_data => s2p_out_raw(6 DOWNTO 0),
 --                         o_data_valid => S2P_out_dv);
 
-----S2P_out(0) <= s2p_out_raw(6);
-----S2P_out(1) <= s2p_out_raw(5);
-----S2P_out(2) <= s2p_out_raw(4);
-----S2P_out(3) <= s2p_out_raw(3);
-----S2P_out(4) <= s2p_out_raw(2);
-----S2P_out(5) <= s2p_out_raw(1);
-----S2P_out(6) <= s2p_out_raw(0);
 --S2P_out(7) <= '0';
 --S2P_out(6 downto 0) <= s2p_out_raw(6 downto 0);
                          
