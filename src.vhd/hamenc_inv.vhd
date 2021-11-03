@@ -51,16 +51,9 @@ begin
                  o_dv <= '0';
               elsif(i_dv = '1')	then
                  o_dv      <= '1';
-                 o_data(0) <= i_data(0) XOR i_data(4) XOR i_data(6);
-                 o_data(1) <= i_data(1) XOR i_data(4) XOR i_data(5) XOR i_data(6);
-                 o_data(2) <= i_data(2) XOR i_data(4) XOR i_data(5);
-                 o_data(3) <= i_data(3) XOR i_data(5) XOR i_data(6);
+                 o_data    <= i_data (3 downto 0);
               else 
                  o_dv      <= '0';
-                 o_data(0) <= i_data(0) XOR i_data(4) XOR i_data(6);
-                 o_data(1) <= i_data(1) XOR i_data(4) XOR i_data(5) XOR i_data(6);
-                 o_data(2) <= i_data(2) XOR i_data(4) XOR i_data(5);
-                 o_data(3) <= i_data(3) XOR i_data(5) XOR i_data(6);
               end if;			
        end if;
     end process;

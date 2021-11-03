@@ -280,12 +280,12 @@ C_r_soft = C_r_soft(1:(length(C_r_soft)-nb_bit_padding));
 C_r_soft_size = length(C_r_soft);
 
 %% Write RX UART
-s = send_UART(C_r_soft,C_r_soft_size)
+% s = send_UART(C_r_soft,C_r_soft_size)
 
 %% Read UART REGISTER TEST
-C_r_hard = recv_UART(s, C_r_soft_size);
-test = C_r_soft - C_r_hard';
-C_r_soft = C_r_hard';
+% C_r_hard = recv_UART(s, C_r_soft_size);
+% test = C_r_soft - C_r_hard';
+% C_r_soft = C_r_hard';
 
 %% Viterbi Decoding
 
@@ -305,8 +305,7 @@ BER_U_A_Viterbi = mean(abs(P_soft-P_r_soft))
 X_r_soft=convdeintrlv(P_r_soft,intlvr_line_nb,intlvr_reg_size);
 
 %% Write UART BCH DECODING TEST
-% s = send_UART(reshape(fliplr(reshape(X_r_soft,bch_n,bch_cwd_nb).'),1,[]),length(X_r_soft))
-% s = send_UART(X_r_soft, length(X_r_soft))
+s = send_UART(X_r_soft, length(X_r_soft))
 
 %% BCH decoding
 
@@ -319,13 +318,13 @@ S_r_soft_Depad = S_r_soft_Depad(1:end-bch_pad_bit_nb)
 %BER_U = mean(abs(S_r_soft_Depad-uint8(U_soft'))); % final BER
 
 %% Read UART BCH DECODING TEST
-% S_r_hard_Depad = recv_UART(s, bch_cwd_nb*bch_k);
-% S_r_hard_Depad = uint8(S_r_hard_Depad);
-% S_r_hard_Depad = reshape(de2bi(S_r_hard_Depad),1,[]);
-% S_r_hard_Depad = S_r_hard_Depad(intlvr_pad_bit_nb+1:end);
-% S_r_hard_Depad = S_r_hard_Depad(1:end-bch_pad_bit_nb);
-% test = S_r_soft_Depad - S_r_hard_Depad;
-% S_r_soft_Depad = S_r_hard_Depad;
+S_r_hard_Depad = recv_UART(s, bch_cwd_nb*bch_k);
+S_r_hard_Depad = uint8(S_r_hard_Depad);
+S_r_hard_Depad = reshape(S_r_hard_Depad,1,[]);
+S_r_hard_Depad = S_r_hard_Depad(intlvr_pad_bit_nb+1:end);
+S_r_hard_Depad = S_r_hard_Depad(1:end-bch_pad_bit_nb);
+test = S_r_soft_Depad - S_r_hard_Depad;
+S_r_soft_Depad = S_r_hard_Depad;
 
 %% Write UART DESCRAMBLEUR TEST
 % s = send_UART(S_r_soft_Depad,length(S_r_soft_Depad))
